@@ -8,18 +8,17 @@ const connect = (port) => {
     const client = new Socket()
     client.connect(port, LOCALHOST, () => {
         console.log('Connected')
-        client.write(`Hello server! Love Client@${clientId}.`)
+        client.write('GET / HTTP/1.1')
     })
     client.on('data', (data) => {
-        console.log(`Received: ${data}`)
-        client.destroy()
+        console.log(`Received from server :: ${data}`)
     })
     client.on('close', () => {
         console.log('Connection closed.')
     })
     return {
         clientId,
-        client
+        client,
     }
 }
 

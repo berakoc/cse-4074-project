@@ -1,4 +1,4 @@
-const { connectServer } = require("./web-server/server");
+const { connectServer } = require('./web-server/server')
 const { getPort, getArgsMap } = require('./utils/args-extractor')
 
 const port = getPort(getArgsMap())

@@ -15,5 +15,5 @@ const getPort = (argsMap) => {
 
 module.exports = {
     getArgsMap,
-    getPort
+    getPort,
 }
