@@ -15,7 +15,7 @@ const connect = (port) => {
             console.clear()
             console.log(`Server is listening on ${LOCALHOST}::${port}`)
             console.log(`Data received from agent :: ${JSON.stringify(parse(data), null, 2)}`)
-            socket.write('HTTP/1.0 200 OK\r\n')
+            socket.write('HTTP/1.0 200 OK\r\n\r\n')
             socket.write('Hello World!\n')
             socket.end()
         })
