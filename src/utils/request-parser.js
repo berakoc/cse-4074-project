@@ -1,4 +1,4 @@
-exports.parse = (httpRequest) => {
+exports.parseRequestToObject = (httpRequest) => {
     httpRequest = httpRequest.toString()
     const requestLines = httpRequest.split('\r\n')
     const modifiedRequestLines = requestLines.filter(requestLine => ~requestLine.indexOf(':'))
