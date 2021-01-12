@@ -6,7 +6,8 @@
     "scripts": {
         "test": "jest --verbose",
         "format": "prettier --write \"src/**/*.js\"",
-        "start": "node src/app.js"
+        "server": "node src/web-server/server.js --port 7000",
+        "client": "node src/web-server/client.js --port 3000"
     },
     "repository": {
         "type": "git",
