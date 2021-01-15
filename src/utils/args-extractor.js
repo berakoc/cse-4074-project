@@ -5,6 +5,14 @@ const getArgsMap = () => {
     return arrayToMap(argsSet)
 }
 
+const checkArgs = (args, predicates) => {
+    for (const predicate of predicates) {
+        if (!predicate.func(args)) {
+            throw new Error(predicate.message)
+        }
+    }
+}
+
 const getPort = (argsMap) => {
     const port = argsMap.get('--port') || argsMap.get('-p')
     if (!port) {
@@ -16,4 +24,5 @@ const getPort = (argsMap) => {
 module.exports = {
     getArgsMap,
     getPort,
+    checkArgs,
 }

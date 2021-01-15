@@ -11,7 +11,11 @@ const connect = (port) => {
         socket.on('data', (data) => {
             console.clear()
             console.log(`Server is listening on ${LOCALHOST}::${port}`)
-            console.log(`Request received from agent :: ${data.toString().substring(0, data.toString().indexOf('\r\n'))}`)
+            console.log(
+                `Request received from agent :: ${data
+                    .toString()
+                    .substring(0, data.toString().indexOf('\r\n'))}`
+            )
             const getHandler = GetHandler(parseRequestToObject(data), socket)
             getHandler.handle()
         })

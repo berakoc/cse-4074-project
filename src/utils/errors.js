@@ -1,3 +1,3 @@
-exports.createErrorMethod = (message, ErrorClass=Error) => {
+exports.createErrorMethod = (message, ErrorClass = Error) => {
     throw new ErrorClass(message)
 }
