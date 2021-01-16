@@ -5,7 +5,6 @@ const { LOCALHOST } = require('../utils/defined-hosts')
 const ProxyHandler = require('../web-server/handlers/proxy-handler')
 const FileAdapter = require('./caching/file-adapter')
 const Cache = require('./caching/cache')
-const { handle } = require('./caching/handler')
 const cacheDir = './caching/cached-pages'
 
 const connect = () => {
@@ -84,7 +83,7 @@ const connect = () => {
                 const htmlString = dataString.substring(dataString.indexOf('<'))
                 cache.createCachedPage(
                     currentNotCachedPageId,
-                    handle(htmlString)
+                    htmlString
                 )
             }
             const flushed = localSocket.write(data)
