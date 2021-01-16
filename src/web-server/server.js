@@ -20,7 +20,7 @@ const connect = (port) => {
                     .toString()
                     .substring(0, data.toString().indexOf('\r\n'))}`
             )
-            // Deligates a GetHandler for handling requests
+            // Delegates a GetHandler for handling requests
             const getHandler = GetHandler(parseRequestToObject(data), socket)
             getHandler.handle()
         })

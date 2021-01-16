@@ -11,7 +11,7 @@ const cacheDir = './caching/cached-pages'
 /**
  * @type {() => void}
  * @brief
- * A function for connecting proxy server
+ * A  for connecting proxy server
  */
 const connect = () => {
     /**
@@ -24,7 +24,7 @@ const connect = () => {
     checkArgs(process.argv, [
         {
             func: (args) => args.length === 5,
-            message: 'Arguments should be: <localPort> <remotePort> <isCached>. Your arguments: '.concat(
+            message: 'Arguments should be: <localPort> <remotePort> <isCacheEnabled>. Your arguments: '.concat(
                 JSON.stringify(process.argv.slice(2))
             ),
         },
@@ -32,12 +32,12 @@ const connect = () => {
     // Destructs the port values from the given args
     const [localPort, remotePort, isCachingEnabled] = process.argv.slice(2)
     // Creates a server and add an onConnect listener
-    const server = createServer(function (localSocket) {
+    const server = createServer((localSocket) => {
         // Creates the remote server socket
         const remoteSocket = new Socket()
         remoteSocket.connect(remotePort, LOCALHOST)
 
-        localSocket.on('connect', function (data) {
+        localSocket.on('connect', (data) => {
             console.log(
                 '>>> connection #%d from %s:%d',
                 server.connections,
@@ -46,7 +46,7 @@ const connect = () => {
             )
         })
 
-        localSocket.on('data', function (data) {
+        localSocket.on('data', (data) => {
             console.log(
                 '%s::%d > Writing data to server',
                 localSocket.remoteAddress,
@@ -90,7 +90,7 @@ const connect = () => {
             }
         })
 
-        remoteSocket.on('data', function (data) {
+        remoteSocket.on('data', (data) => {
             console.log(
                 '%s::%d > Writing data to proxy',
                 localSocket.remoteAddress,
@@ -115,7 +115,7 @@ const connect = () => {
             }
         })
 
-        localSocket.on('drain', function () {
+        localSocket.on('drain', () => {
             console.log(
                 '%s::%d > Resuming server',
                 localSocket.remoteAddress,
@@ -124,7 +124,7 @@ const connect = () => {
             remoteSocket.resume()
         })
 
-        remoteSocket.on('drain', function () {
+        remoteSocket.on('drain', () => {
             console.log(
                 '%s::%d > Resuming proxy',
                 localSocket.remoteAddress,
@@ -143,7 +143,7 @@ const connect = () => {
             proxyHandler.serverStatusError(err['errno'])
         })
 
-        localSocket.on('close', function (had_error) {
+        localSocket.on('close', (had_error) => {
             console.log(
                 '%s::%d > closing server',
                 localSocket.remoteAddress,
@@ -152,7 +152,7 @@ const connect = () => {
             remoteSocket.end()
         })
 
-        remoteSocket.on('close', function (had_error) {
+        remoteSocket.on('close', (had_error) => {
             console.log(
                 '%s:%d > Closing proxy',
                 localSocket.remoteAddress,
