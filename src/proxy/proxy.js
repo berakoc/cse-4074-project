@@ -1,6 +1,8 @@
-const { createServer, Socket } = require("net");
-const { LOCALHOST } = require("../utils/defined-hosts");
-const { checkArgs } = require('../utils/args-extractor.js')
+const { createServer, Socket } = require('net')
+const { checkArgs } = require('../utils/args-extractor')
+const { parseRequestToObject } = require('../utils/request-parser')
+const { LOCALHOST } = require('../utils/defined-hosts')
+const ProxyHandler = require('../web-server/handlers/proxy-handler')
 
 const connect = () => {
   checkArgs(process.argv, [
