@@ -5,9 +5,9 @@
     "main": "src/app.js",
     "scripts": {
         "test": "jest --verbose",
-        "format": "prettier --write \"src/**/*.js\"",
+        "format": "npx prettier --write \"src/**/*.js\"",
         "server": "node src/web-server/server.js --port 7000",
-        "client": "node src/web-server/client.js --port 3000"
+        "proxy": "node src/proxy/proxy.js 8080 7000"
     },
     "repository": {
         "type": "git",

@@ -11,7 +11,7 @@ exports.DEFAULT_STRUCTURE = (content) => ({
             head: {
                 title: 'Web Page',
             },
-            body: content
-        }
-    }
+            body: content,
+        },
+    },
 })

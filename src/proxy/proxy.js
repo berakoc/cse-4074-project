@@ -1,89 +1,112 @@
-var net = require("net");
+const { createServer, Socket } = require('net')
+const { checkArgs } = require('../utils/args-extractor')
+const { parseRequestToObject } = require('../utils/request-parser')
+const { LOCALHOST } = require('../utils/defined-hosts')
+const ProxyHandler = require('../web-server/handlers/proxy-handler')
 
-process.on("uncaughtException", function (error) {
-    console.error(error);
-});
+const connect = () => {
+  checkArgs(process.argv, [
+    {
+        func: (args) => args.length === 4,
+        message: 'Arguments should be: <localport> <remoteport>. Your arguments: '.concat(
+            JSON.stringify(process.argv.slice(2))
+        ),
+    },
+  ])
+  
+  
+  const [ localPort, remotePort ] = process.argv.slice(2)
+  
+  const server = createServer(function (localSocket) {
+    const remoteSocket = new Socket();
+  
+    remoteSocket.connect(remotePort, LOCALHOST);
+  
+    localSocket.on('connect', function (data) {
+      console.log(">>> connection #%d from %s:%d",
+        server.connections,
+        localSocket.remoteAddress,
+        localSocket.remotePort
+      );
+    });
+  
+    localSocket.on('data', function (data) {
+      console.log("%s:%d - writing data to remote",
+        localSocket.remoteAddress,
+        localSocket.remotePort
+      );
+      const proxyHandler = ProxyHandler(localSocket)
+      proxyHandler.requestError(parseRequestToObject(data))
+      const flushed = remoteSocket.write(data);
+      if (!flushed) {
+        console.log("  remote not flushed; pausing local");
+        localSocket.pause();
+      }
+    });
+  
+    remoteSocket.on('data', function(data) {
+      console.log("%s:%d - writing data to local",
+        localSocket.remoteAddress,
+        localSocket.remotePort
+      );
+      const flushed = localSocket.write(data);
+      if (!flushed) {
+        console.log("  local not flushed; pausing remote");
+        remoteSocket.pause();
+      }
+    });
+  
+    localSocket.on('drain', function() {
+      console.log("%s:%d - resuming remote",
+        localSocket.remoteAddress,
+        localSocket.remotePort
+      );
+      remoteSocket.resume();
+    });
+  
+    remoteSocket.on('drain', function() {
+      console.log("%s:%d - resuming local",
+        localSocket.remoteAddress,
+        localSocket.remotePort
+      );
+      localSocket.resume();
+    });
 
-if (process.argv.length != 5) {
-    console.log("usage: %s <localport> <remotehost> <remoteport>", process.argv[1]);
-    process.exit();
+    remoteSocket.on('error', (err) => {
+        const proxyHandler = ProxyHandler(localSocket)
+        proxyHandler.serverStatusError(err['errno'])
+    })
+
+    localSocket.on('error', (err) => {
+        const proxyHandler = ProxyHandler(localSocket)
+        proxyHandler.serverStatusError(err['errno'])
+    })
+
+    localSocket.on('close', function(had_error) {
+      console.log("%s:%d - closing remote",
+        localSocket.remoteAddress,
+        localSocket.remotePort
+      );
+      remoteSocket.end();
+    });
+  
+    remoteSocket.on('close', function(had_error) {
+      console.log("%s:%d - closing local",
+        localSocket.remoteAddress,
+        localSocket.remotePort
+      );
+      localSocket.end();
+    });
+  
+  });
+  
+  server.listen(localPort);
+  
+  console.log("redirecting connections from 127.0.0.1:%d to %s:%d", localPort, LOCALHOST, remotePort);
 }
 
-var localport = process.argv[2];
-var remotehost = process.argv[3];
-var remoteport = process.argv[4];
+if (require.main) {
+  connect()
+}
 
-var server = net.createServer(function (localsocket) {
-    var remotesocket = new net.Socket();
-
-    remotesocket.connect(remoteport, remotehost);
-
-    localsocket.on('connect', function (data) {
-        console.log(">>> connection #%d from %s:%d",
-            server.connections,
-            localsocket.remoteAddress,
-            localsocket.remotePort
-        );
-    });
-
-    localsocket.on('data', function (data) {
-        console.log("%s:%d - writing data to remote",
-            localsocket.remoteAddress,
-            localsocket.remotePort
-        );
-        var flushed = remotesocket.write(data);
-        if (!flushed) {
-            console.log("  remote not flushed; pausing local");
-            localsocket.pause();
-        }
-    });
-
-    remotesocket.on('data', function (data) {
-        console.log("%s:%d - writing data to local",
-            localsocket.remoteAddress,
-            localsocket.remotePort
-        );
-        var flushed = localsocket.write(data);
-        if (!flushed) {
-            console.log("  local not flushed; pausing remote");
-            remotesocket.pause();
-        }
-    });
-
-    localsocket.on('drain', function () {
-        console.log("%s:%d - resuming remote",
-            localsocket.remoteAddress,
-            localsocket.remotePort
-        );
-        remotesocket.resume();
-    });
-
-    remotesocket.on('drain', function () {
-        console.log("%s:%d - resuming local",
-            localsocket.remoteAddress,
-            localsocket.remotePort
-        );
-        localsocket.resume();
-    });
-
-    localsocket.on('close', function (had_error) {
-        console.log("%s:%d - closing remote",
-            localsocket.remoteAddress,
-            localsocket.remotePort
-        );
-        remotesocket.end();
-    });
-
-    remotesocket.on('close', function (had_error) {
-        console.log("%s:%d - closing local",
-            localsocket.remoteAddress,
-            localsocket.remotePort
-        );
-        localsocket.end();
-    });
-
-});
-
-server.listen(localport);
-
-console.log("redirecting connections from 127.0.0.1:%d to %s:%d", localport, remotehost, remoteport);
+exports.connectProxy = connect

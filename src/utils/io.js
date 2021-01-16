@@ -14,10 +14,21 @@ exports.calculateSize = (fileContent) => {
     return Buffer.from(fileContent, 'utf-8').length
 }
 
-exports.generateHTMLFile = (size, filename=path.resolve('example.txt')) => {
+exports.generateHTMLFile = (size, filename = path.resolve('example.txt')) => {
     let isErrorGiven = false
     if (size < 100 || size > 20000 || !+size) isErrorGiven = true
     const remainingSize = size - fixedSize
     const fileContent = this.readFile(filename)
-    return [isErrorGiven ? [400, 'Bad Request'.toUpperCase()] : [200, 'Ok'.toUpperCase()], isErrorGiven ? '400::Bad Request' : new HtmlEngine(DEFAULT_STRUCTURE(htmlEncode(fileContent.slice(0, remainingSize).toString()))).render()]
+    return [
+        isErrorGiven
+            ? [400, 'Bad Request'.toUpperCase()]
+            : [200, 'Ok'.toUpperCase()],
+        isErrorGiven
+            ? '400::Bad Request'
+            : new HtmlEngine(
+                  DEFAULT_STRUCTURE(
+                      htmlEncode(fileContent.slice(0, remainingSize).toString())
+                  )
+              ).render(),
+    ]
 }
