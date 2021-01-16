@@ -80,7 +80,7 @@ const connect = () => {
                 localSocket.remotePort
             )
             const dataString = data.toString()
-            if (dataString.includes('<')) {
+            if (dataString.includes('<') && currentNotCachedPageId < 9999) {
                 const htmlString = dataString.substring(dataString.indexOf('<'))
                 cache.createCachedPage(
                     currentNotCachedPageId,

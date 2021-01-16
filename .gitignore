@@ -2,6 +2,8 @@
 .vscode
 package-lock.json
 
+src/proxy/caching/cached-pages/*.html
+
 # Logs
 logs
 *.log
