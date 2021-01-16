@@ -35,6 +35,8 @@ const connect = () => {
         localSocket.remoteAddress,
         localSocket.remotePort
       );
+      const proxyHandler = ProxyHandler(localSocket)
+      proxyHandler.requestError(parseRequestToObject(data))
       const flushed = remoteSocket.write(data);
       if (!flushed) {
         console.log("  remote not flushed; pausing local");
@@ -69,7 +71,17 @@ const connect = () => {
       );
       localSocket.resume();
     });
-  
+
+    remoteSocket.on('error', (err) => {
+        const proxyHandler = ProxyHandler(localSocket)
+        proxyHandler.serverStatusError(err['errno'])
+    })
+
+    localSocket.on('error', (err) => {
+        const proxyHandler = ProxyHandler(localSocket)
+        proxyHandler.serverStatusError(err['errno'])
+    })
+
     localSocket.on('close', function(had_error) {
       console.log("%s:%d - closing remote",
         localSocket.remoteAddress,
