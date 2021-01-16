@@ -14,6 +14,11 @@ exports.calculateSize = (fileContent) => {
     return Buffer.from(fileContent, 'utf-8').length
 }
 
+/**
+ * Generates an HTML file using size as a constraint and example.txt as content provider
+ * @param {Number} size File size
+ * @param {String} filename 
+ */
 exports.generateHTMLFile = (size, filename = path.resolve('example.txt')) => {
     let isErrorGiven = false
     if (size < 100 || size > 20000 || !+size) isErrorGiven = true

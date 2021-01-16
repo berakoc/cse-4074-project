@@ -1,3 +1,7 @@
+/**
+ * Parses request string to an object
+ * @param {String} httpRequest String represantation of an HTTP request
+ */
 exports.parseRequestToObject = (httpRequest) => {
     httpRequest = httpRequest.toString()
     const requestLines = httpRequest.split('\r\n')

@@ -1,3 +1,9 @@
+const { Socket } = require('net')
+
+/**
+ * Same as GetHandler yet it is dedicated for Proxy handling
+ * @param {Socket} Socket Proxy socket
+ */
 const ProxyHandler = (Socket) => {
     const createResponseHeader = (code, status, contentLength) => {
         return `HTTP/1.1 ${code} ${status}\r\n`

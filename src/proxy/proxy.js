@@ -8,7 +8,17 @@ const Cache = require('./caching/cache')
 const { handle } = require('./caching/handler')
 const cacheDir = './caching/cached-pages'
 
+/**
+ * @type {() => void}
+ * @brief
+ * A function for connecting proxy server
+ */
 const connect = () => {
+    /**
+     * @type {Number|null}
+     * @brief Holds the value of the page id when the page is not cached. If it's 
+     * cached then the value is null.
+     */
     let currentNotCachedPageId
     const cache = new Cache(FileAdapter, cacheDir)
     checkArgs(process.argv, [
@@ -19,10 +29,11 @@ const connect = () => {
             ),
         },
     ])
-
+    // Destructs the port values from the given args
     const [localPort, remotePort] = process.argv.slice(2)
-
+    // Creates a server and add an onConnect listener
     const server = createServer(function (localSocket) {
+        // Creates the remote server socket
         const remoteSocket = new Socket()
         remoteSocket.connect(remotePort, LOCALHOST)
 
@@ -37,11 +48,13 @@ const connect = () => {
 
         localSocket.on('data', function (data) {
             console.log(
-                '%s:%d - writing data to remote',
+                '%s::%d > Writing data to server',
                 localSocket.remoteAddress,
                 localSocket.remotePort
             )
+            // Creates a ProxyHandler for checking request whether it is valid or not
             const proxyHandler = ProxyHandler(localSocket)
+            // Generates errors if there is any problems in request
             proxyHandler.requestError(parseRequestToObject(data))
             const dataString = data.toString()
             const pageId = (() => {
@@ -55,6 +68,7 @@ const connect = () => {
                 return isNaN(+requestPath) ? null : +requestPath
             })()
             let isCached, page
+            // In the proxy checks if the given page id is cached
             if (pageId) {
                 ;[isCached, page] = cache.getCachedPage(pageId)
                 currentNotCachedPageId = isCached ? null : pageId
@@ -64,22 +78,25 @@ const connect = () => {
                     ? 'Obtaining data from the cache'
                     : 'Obtaining from the server'
             )
+            // Writes to the client instead of server, if the page is cached
             const flushed = isCached
                 ? localSocket.write(handle(page))
                 : remoteSocket.write(data)
             if (!flushed) {
-                console.log('  remote not flushed; pausing local')
+                console.log('Server not flushed. Pausing proxy')
                 localSocket.pause()
             }
         })
 
         remoteSocket.on('data', function (data) {
             console.log(
-                '%s:%d - writing data to local',
+                '%s::%d > Writing data to proxy',
                 localSocket.remoteAddress,
                 localSocket.remotePort
             )
             const dataString = data.toString()
+            // If the response from the server contains HTML it caches the content
+            // using page id
             if (dataString.includes('<') && currentNotCachedPageId < 9999) {
                 const htmlString = dataString.substring(dataString.indexOf('<'))
                 cache.createCachedPage(
@@ -89,14 +106,14 @@ const connect = () => {
             }
             const flushed = localSocket.write(data)
             if (!flushed) {
-                console.log('  local not flushed; pausing remote')
+                console.log('Proxy not flushed. Pausing server')
                 remoteSocket.pause()
             }
         })
 
         localSocket.on('drain', function () {
             console.log(
-                '%s:%d - resuming remote',
+                '%s::%d > Resuming server',
                 localSocket.remoteAddress,
                 localSocket.remotePort
             )
@@ -105,7 +122,7 @@ const connect = () => {
 
         remoteSocket.on('drain', function () {
             console.log(
-                '%s:%d - resuming local',
+                '%s::%d > Resuming proxy',
                 localSocket.remoteAddress,
                 localSocket.remotePort
             )
@@ -124,7 +141,7 @@ const connect = () => {
 
         localSocket.on('close', function (had_error) {
             console.log(
-                '%s:%d - closing remote',
+                '%s::%d > closing remote',
                 localSocket.remoteAddress,
                 localSocket.remotePort
             )
@@ -144,7 +161,8 @@ const connect = () => {
     server.listen(localPort)
 
     console.log(
-        'redirecting connections from 127.0.0.1:%d to %s:%d',
+        'Redirecting connections from %s:%d to %s:%d',
+        LOCALHOST,
         localPort,
         LOCALHOST,
         remotePort

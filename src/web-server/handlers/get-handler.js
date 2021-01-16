@@ -1,6 +1,12 @@
 const { createErrorMethod } = require('../../utils/errors')
 const { generateHTMLFile } = require('../../utils/io')
+const { Socket } = require('net')
 
+/**
+ * Default handler for the web server
+ * @param {Object} httpRequestHeader An object contains request header values in object notation
+ * @param {Socket} socket Server socket
+ */
 const GetHandler = (httpRequestHeader, socket) => {
     const $requestHeader = httpRequestHeader
     const $socket = socket
@@ -20,12 +26,21 @@ const GetHandler = (httpRequestHeader, socket) => {
             .concat(`Content-Type: text/html\r\n\r\n`)
     }
     return {
+        /**
+         * Returns the value of the key given in the request header object.
+         * Returns an error function if key is not found.
+         * @param {String} key Request header key
+         */
         getRequestValue: (key) => {
             return (
                 $requestHeader[key] ||
                 createErrorMethod('Key is not found in request header.')
             )
         },
+        /**
+         * Core handling method for the web server
+         * Checks all constraints and returns a valid HTTP response
+         */
         handle: () => {
             const requestInfo = $requestHeader['Request-Info']
             const requestMethod = requestInfo.substring(

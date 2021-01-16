@@ -4,6 +4,10 @@ const { parseRequestToObject } = require('../utils/request-parser')
 const run = require('../utils/runner')
 const GetHandler = require('./handlers/get-handler')
 
+/**
+ * Default connection method for the web server
+ * @param {Number} port Server port
+ */
 const connect = (port) => {
     const server = net.createServer()
     server.listen(port, LOCALHOST)
@@ -16,6 +20,7 @@ const connect = (port) => {
                     .toString()
                     .substring(0, data.toString().indexOf('\r\n'))}`
             )
+            // Deligates a GetHandler for handling requests
             const getHandler = GetHandler(parseRequestToObject(data), socket)
             getHandler.handle()
         })
