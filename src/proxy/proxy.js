@@ -41,6 +41,8 @@ const connect = () => {
                 localSocket.remoteAddress,
                 localSocket.remotePort
             )
+            const proxyHandler = ProxyHandler(localSocket)
+            proxyHandler.requestError(parseRequestToObject(data))
             const dataString = data.toString()
             const pageId = (() => {
                 const requestSubstring = dataString.substring(
@@ -54,11 +56,17 @@ const connect = () => {
             })()
             let isCached, page
             if (pageId) {
-                [isCached, page] = cache.getCachedPage(pageId)
+                ;[isCached, page] = cache.getCachedPage(pageId)
                 currentNotCachedPageId = isCached ? null : pageId
             }
-            console.log(isCached ? 'Obtaining data from the cache' : 'Obtaining from the server')
-            const flushed = isCached ? localSocket.write(page) : remoteSocket.write(data)
+            console.log(
+                isCached
+                    ? 'Obtaining data from the cache'
+                    : 'Obtaining from the server'
+            )
+            const flushed = isCached
+                ? localSocket.write(page)
+                : remoteSocket.write(data)
             if (!flushed) {
                 console.log('  remote not flushed; pausing local')
                 localSocket.pause()
@@ -74,7 +82,10 @@ const connect = () => {
             const dataString = data.toString()
             if (dataString.includes('<')) {
                 const htmlString = dataString.substring(dataString.indexOf('<'))
-                cache.createCachedPage(currentNotCachedPageId, handle(htmlString))
+                cache.createCachedPage(
+                    currentNotCachedPageId,
+                    handle(htmlString)
+                )
             }
             const flushed = localSocket.write(data)
             if (!flushed) {
@@ -99,6 +110,16 @@ const connect = () => {
                 localSocket.remotePort
             )
             localSocket.resume()
+        })
+
+        remoteSocket.on('error', (err) => {
+            const proxyHandler = ProxyHandler(localSocket)
+            proxyHandler.serverStatusError(err['errno'])
+        })
+
+        localSocket.on('error', (err) => {
+            const proxyHandler = ProxyHandler(localSocket)
+            proxyHandler.serverStatusError(err['errno'])
         })
 
         localSocket.on('close', function (had_error) {
@@ -128,18 +149,6 @@ const connect = () => {
         LOCALHOST,
         remotePort
     )
-      const proxyHandler = ProxyHandler(localSocket)
-      proxyHandler.requestError(parseRequestToObject(data))
-    remoteSocket.on('error', (err) => {
-        const proxyHandler = ProxyHandler(localSocket)
-        proxyHandler.serverStatusError(err['errno'])
-    })
-
-    localSocket.on('error', (err) => {
-        const proxyHandler = ProxyHandler(localSocket)
-        proxyHandler.serverStatusError(err['errno'])
-    })
-
 }
 
 if (require.main) {

@@ -1,16 +1,21 @@
 const ProxyHandler = (Socket) => {
-    
     const createResponseHeader = (code, status, contentLength) => {
         return `HTTP/1.1 ${code} ${status}\r\n`
             .concat(`Content-Length: ${contentLength}\r\n`)
             .concat(`Content-Type: text/html\r\n\r\n`)
     }
-    
+
     return {
         requestError: (Request) => {
-            const URISize = Request['Request-Info'].substring(Request['Request-Info'].indexOf('/') + 1, Request['Request-Info'].indexOf('H') - 1)
-            let code, status, responseBody, isThereErr = false
-            if(URISize > 9999) {
+            const URISize = Request['Request-Info'].substring(
+                Request['Request-Info'].indexOf('/') + 1,
+                Request['Request-Info'].indexOf('H') - 1
+            )
+            let code,
+                status,
+                responseBody,
+                isThereErr = false
+            if (URISize > 9999) {
                 isThereErr = true
                 ;[[code, status], responseBody] = [
                     [414, 'REQUEST-URI TOO LONG'],
@@ -25,12 +30,17 @@ const ProxyHandler = (Socket) => {
                     createResponseHeader(code, status, responseBody.length)
                 )
                 Socket.write(responseBody)
-                console.log(`Response sent to the agent[${Request['User-Agent']}].`)
+                console.log(
+                    `Response sent to the agent[${Request['User-Agent']}].`
+                )
             }
         },
         serverStatusError: (err) => {
-            let code, status, responseBody, isThereErr = false
-            if(err == 'ECONNREFUSED'){
+            let code,
+                status,
+                responseBody,
+                isThereErr = false
+            if (err == 'ECONNREFUSED') {
                 isThereErr = true
                 ;[[code, status], responseBody] = [
                     [404, 'NOT FOUND'],

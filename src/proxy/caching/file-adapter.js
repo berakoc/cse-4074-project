@@ -19,8 +19,11 @@ const FileAdapter = {
         ]
     },
     createCachedPage(pageId, content, cacheDir) {
-        return fs.writeFileSync(resolve(cacheDir, String(pageId).concat(pageExtension)), content)
-    }
+        return fs.writeFileSync(
+            resolve(cacheDir, String(pageId).concat(pageExtension)),
+            content
+        )
+    },
 }
 
 module.exports = FileAdapter
