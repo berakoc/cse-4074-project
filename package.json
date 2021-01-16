@@ -7,7 +7,7 @@
         "test": "jest --verbose",
         "format": "npx prettier --write \"src/**/*.js\"",
         "server": "node src/web-server/server.js --port 7000",
-        "proxy": "cd src/proxy && node proxy.js 8080 7000"
+        "proxy": "cd src/proxy && node proxy.js 8888 7000"
     },
     "repository": {
         "type": "git",

@@ -5,6 +5,7 @@ const { LOCALHOST } = require('../utils/defined-hosts')
 const ProxyHandler = require('../web-server/handlers/proxy-handler')
 const FileAdapter = require('./caching/file-adapter')
 const Cache = require('./caching/cache')
+const { handle } = require('./caching/handler')
 const cacheDir = './caching/cached-pages'
 
 const connect = () => {
@@ -64,7 +65,7 @@ const connect = () => {
                     : 'Obtaining from the server'
             )
             const flushed = isCached
-                ? localSocket.write(page)
+                ? localSocket.write(handle(page))
                 : remoteSocket.write(data)
             if (!flushed) {
                 console.log('  remote not flushed; pausing local')
