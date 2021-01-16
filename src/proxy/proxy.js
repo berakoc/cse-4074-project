@@ -23,14 +23,14 @@ const connect = () => {
     const cache = new Cache(FileAdapter, cacheDir)
     checkArgs(process.argv, [
         {
-            func: (args) => args.length === 4,
-            message: 'Arguments should be: <localport> <remoteport>. Your arguments: '.concat(
+            func: (args) => args.length === 5,
+            message: 'Arguments should be: <localPort> <remotePort> <isCached>. Your arguments: '.concat(
                 JSON.stringify(process.argv.slice(2))
             ),
         },
     ])
     // Destructs the port values from the given args
-    const [localPort, remotePort] = process.argv.slice(2)
+    const [localPort, remotePort, isCachingEnabled] = process.argv.slice(2)
     // Creates a server and add an onConnect listener
     const server = createServer(function (localSocket) {
         // Creates the remote server socket
@@ -57,21 +57,23 @@ const connect = () => {
             // Generates errors if there is any problems in request
             proxyHandler.requestError(parseRequestToObject(data))
             const dataString = data.toString()
-            const pageId = (() => {
-                const requestSubstring = dataString.substring(
-                    dataString.indexOf('/') + 1
-                )
-                const requestPath = requestSubstring.substring(
-                    0,
-                    requestSubstring.indexOf(' ')
-                )
-                return isNaN(+requestPath) ? null : +requestPath
-            })()
             let isCached, page
-            // In the proxy checks if the given page id is cached
-            if (pageId) {
-                ;[isCached, page] = cache.getCachedPage(pageId)
-                currentNotCachedPageId = isCached ? null : pageId
+            if (isCachingEnabled === 'true') {
+                const pageId = (() => {
+                    const requestSubstring = dataString.substring(
+                        dataString.indexOf('/') + 1
+                    )
+                    const requestPath = requestSubstring.substring(
+                        0,
+                        requestSubstring.indexOf(' ')
+                    )
+                    return isNaN(+requestPath) ? null : +requestPath
+                })()
+                // In the proxy checks if the given page id is cached
+                if (pageId) {
+                    ;[isCached, page] = cache.getCachedPage(pageId)
+                    currentNotCachedPageId = isCached ? null : pageId
+                }
             }
             console.log(
                 isCached
@@ -97,12 +99,14 @@ const connect = () => {
             const dataString = data.toString()
             // If the response from the server contains HTML it caches the content
             // using page id
-            if (dataString.includes('<') && currentNotCachedPageId < 9999) {
-                const htmlString = dataString.substring(dataString.indexOf('<'))
-                cache.createCachedPage(
-                    currentNotCachedPageId,
-                    htmlString
-                )
+            if (isCachingEnabled === 'true') {
+                if (dataString.includes('<') && currentNotCachedPageId < 9999) {
+                    const htmlString = dataString.substring(dataString.indexOf('<'))
+                    cache.createCachedPage(
+                        currentNotCachedPageId,
+                        htmlString
+                    )
+                }
             }
             const flushed = localSocket.write(data)
             if (!flushed) {
@@ -141,7 +145,7 @@ const connect = () => {
 
         localSocket.on('close', function (had_error) {
             console.log(
-                '%s::%d > closing remote',
+                '%s::%d > closing server',
                 localSocket.remoteAddress,
                 localSocket.remotePort
             )
@@ -150,7 +154,7 @@ const connect = () => {
 
         remoteSocket.on('close', function (had_error) {
             console.log(
-                '%s:%d - closing local',
+                '%s:%d > Closing proxy',
                 localSocket.remoteAddress,
                 localSocket.remotePort
             )
